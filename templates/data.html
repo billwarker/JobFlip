@@ -1,0 +1,12 @@
+{% block content %}
+    {% for job in jobs %}
+        <h1>{{ job.Title }}</h1>
+        <h2>{{ job.Company }}</h2>
+        <h2>{{ job.Location }}</h2>
+        <div>
+
+        <p>
+        {{ job.Description }}
+        </p>
+    {% endfor %}
+{% endblock %}

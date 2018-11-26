@@ -1,0 +1,7 @@
+__pycache__
+.vscode
+node_modules
+yarn.lock
+package.json
+package-lock.json
+config.py
