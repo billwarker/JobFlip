@@ -1,14 +1,16 @@
 import os
 import json
-import pymongo
+from pymongo import MongoClient
 import nltk
 from nltk.corpus import stopwords
-from config import *
+from config import Config
 from collections import Counter
 #from app import conn, db
 
-conn = pymongo.MongoClient(MONGO_URI)
-db = conn[DB]
+mongo_config = Config()
+conn = MongoClient(mongo_config.MONGO_URI)
+db = conn[mongo_config.DB]
+
 stop_list = stopwords.words()
 
 def find_relevant_jobs(query):

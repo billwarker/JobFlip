@@ -5,14 +5,14 @@ import time
 from datetime import datetime
 import os
 import json
-import pymongo
-from app import conn, db
+from pymongo import MongoClient
+from config import *
 
 class Scraper:
     
     base_URL = "https://www.indeed.ca"
 
-    def __init__(self, job, location):
+    def __init__(self, job, location, conn, db):
         
 
         self.client = conn
@@ -116,8 +116,11 @@ class Scraper:
         #jobs = self.db["{}+{}".format(self.job, self.location)]
         jobs.insert_many(self.total_scraped_jobs)
 
-if __name__ == "__main__":       
-    test = Scraper("UX Designer", "Toronto")
+if __name__ == "__main__":
+    conn = MongoClient(MONGO_URI)
+    db = conn[DB]
+
+    test = Scraper("UX Designer", "Toronto", conn, db)
     test.scrape(num_jobs=50)
     #test.write_json()
     test.write_to_mongo()
