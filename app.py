@@ -42,7 +42,7 @@ def index():
         job = form.job_title.data
         location = form.location.data
         try:
-            word_freqs_js = w.get_words(job, 3, 50)
+            word_freqs_js = w.get_words(job, 2, 50)
             max_freq = word_freqs_js[0]["size"]
             if max_freq < 10: max_freq = 10
             else: max_freq = 20
