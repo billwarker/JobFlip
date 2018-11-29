@@ -3,7 +3,7 @@ from flask import render_template, redirect, request
 from config import Config
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SubmitField, IntegerField
 from wtforms.validators import DataRequired
 
 import words as w
@@ -31,6 +31,7 @@ def scrape_job_data(job_query, location_query, num_jobs):
 class SearchForm(FlaskForm):
     job_title = StringField("Job Title", validators=[DataRequired()])
     location = StringField("Location", validators=[DataRequired()])
+    n_grams = IntegerField("N Grams", validators=[DataRequired()]) 
     submit = SubmitField("Search Jobs")
 
 @app.route('/', methods=["GET", "POST"])
@@ -41,10 +42,13 @@ def index():
     if form.validate_on_submit():
         job = form.job_title.data
         location = form.location.data
+        n_grams = form.n_grams.data
         try:
-            word_freqs_js = w.get_words(job, 2, 50)
+            word_freqs_js = w.get_words(job, n_grams, 50)
             max_freq = word_freqs_js[0]["size"]
-            if max_freq < 10: max_freq = 10
+            print(max_freq)
+            if max_freq < 10 and max_freq >= 5: max_freq = 10
+            elif max_freq < 5: max_freq = 3
             else: max_freq = 20
             return render_template("index.html", form=form,
                                                 word_freqs=word_freqs_js,
@@ -70,7 +74,6 @@ def index():
 def data():
     jobs = db.jobs.find()
     return render_template("data.html", jobs=jobs)
-
 
 if __name__ == "__main__":
     app.debug = True

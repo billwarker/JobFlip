@@ -57,6 +57,8 @@
               {{ form.job_title(id_="inputJob", class_="form-control", placeholder="Data Scientist") }}
               <label for="inputLocation" class="sr-only">Location</label>
               {{ form.location(id_="inputLocation", class_="form-control", placeholder="Toronto") }}
+              <label for="inputGrams" class="sr-only">N Grams</label>
+              {{ form.n_grams(id_="inputGrams", class_="form-control", placeholder=3) }}
               {{ form.submit(class_="btn btn-lg btn-primary btn-block") }}
             </form>
             {% endblock %}
