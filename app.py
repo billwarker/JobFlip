@@ -22,7 +22,7 @@ mongo_config = Config()
 conn = MongoClient(mongo_config.MONGO_URI)
 db = conn[mongo_config.DB]
 
-@celery.task
+@celery.task(bind=True)
 def scrape_job_data(job_query, location_query, num_jobs):
     scraper = Scraper(job_query, location_query, conn, db)
     scraper.scrape(num_jobs=num_jobs)
