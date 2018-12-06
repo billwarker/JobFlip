@@ -23,15 +23,18 @@ conn = MongoClient(mongo_config.MONGO_URI)
 db = conn[mongo_config.DB]
 
 @celery.task(bind=True)
-def scrape_job_data(job_query, location_query, num_jobs):
+def scrape_job_data(self, job_query, location_query, num_jobs):
+    status = "Searching for {} jobs in {} ...".format(job_query, location_query)
+    self.update_state(state="STARTED", meta={"status": status})
     scraper = Scraper(job_query, location_query, conn, db)
     scraper.scrape(num_jobs=num_jobs)
     scraper.write_to_mongo()
+    self.update_state(state="SUCCESS", meta={"status": status + " Done!"})
 
 class SearchForm(FlaskForm):
     job_title = StringField("Job Title", validators=[DataRequired()])
     location = StringField("Location", validators=[DataRequired()])
-    n_grams = IntegerField("N Grams", validators=[DataRequired()]) 
+    n_grams = IntegerField("N Grams", validators=[DataRequired()])
     submit = SubmitField("Search Jobs")
 
 @app.route('/', methods=["GET", "POST"])
