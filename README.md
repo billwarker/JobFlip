@@ -8,6 +8,12 @@ JobFlip helps solve this problem by performing n-gram text analysis on job listi
 
 JobFlip was developed in Python with the following technologies: Flask, D3.js, Celery, Redis, and MongoDB. It requires a connection to a MongoDB database (either on a local server or in the cloud with MongoDB's Atlas service) to store job listing data. To get started with MongoDB, check out this [link](https://www.mongodb.com/download-center?jmp=nav). The word cloud in D3.js is not my own code, but rather an open-source implementation created by Jason Davies. Check out the repo for his word cloud [here](https://github.com/jasondavies/d3-cloud)!
 
+## To-Do
+
+1. Deploy with Docker
+2. Fix city queries
+3. Add loading bar
+
 ## Quick Setup
 
 1. Clone this repository.
