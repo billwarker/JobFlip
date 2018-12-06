@@ -6,7 +6,7 @@ from datetime import datetime
 import os
 import json
 from pymongo import MongoClient
-from config import *
+from config import Config
 
 class Scraper:
     
@@ -117,8 +117,10 @@ class Scraper:
         jobs.insert_many(self.total_scraped_jobs)
 
 if __name__ == "__main__":
-    conn = MongoClient(MONGO_URI)
-    db = conn[DB]
+
+    db_config = Config()
+    conn = MongoClient(db_config.MONGO_URI)
+    db = conn[db_config.DB]
 
     test = Scraper("UX Designer", "Toronto", conn, db)
     test.scrape(num_jobs=50)
