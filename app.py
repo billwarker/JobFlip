@@ -40,27 +40,28 @@ def index():
     form = SearchForm()
     # if user does a search
     if form.validate_on_submit():
+        
         job = form.job_title.data
         location = form.location.data
         n_grams = form.n_grams.data
-        try:
-            word_freqs_js = w.get_words(job, n_grams, 50)
-            max_freq = word_freqs_js[0]["size"]
-            print(max_freq)
-            if max_freq < 10 and max_freq >= 5: max_freq = 10
-            elif max_freq < 5: max_freq = 3
-            else: max_freq = 20
-            return render_template("index.html", form=form,
-                                                word_freqs=word_freqs_js,
-                                                max_freq=max_freq)
-        except IndexError:
+
+        word_freqs_js, job_matches = w.get_words(job, location, n_grams, 50)
+        if job_matches > 0:
+            try:
+                max_freq = word_freqs_js[0]["size"]
+                if max_freq < 10 and max_freq >= 5: max_freq = 10
+                elif max_freq < 5: max_freq = 3
+                else: max_freq = 20
+            except IndexError:
+                word_freqs_js = [{"text": "No Text Data", "size": 5}, {"text": "Sorry!", "size": 2}]
+                max_freq = 5
+        else:
             scrape_job_data.apply_async(args=[job, location, 50])
-            print("Looking for jobs...")
             word_freqs_js = [{"text": "No Results", "size": 5}, {"text": "Searching Indeed.ca...", "size": 2}]
             max_freq = 5
-            return render_template("index.html", form=form,
-                                                word_freqs=word_freqs_js,
-                                                max_freq=max_freq)
+        return render_template("index.html", form=form,
+                                            word_freqs=word_freqs_js,
+                                            max_freq=max_freq)
 
     # displaying the initial index page
     word_freqs_js = [{"text": "Search", "size": 5}, {"text": "for", "size": 5},

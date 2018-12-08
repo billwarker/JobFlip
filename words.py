@@ -13,10 +13,12 @@ db = conn[mongo_config.DB]
 
 stop_list = stopwords.words()
 
-def find_relevant_jobs(query):
+def find_relevant_jobs(job_query, location_query):
     db.jobs.create_index([('Title', 'text')])
-    job_results = db.jobs.find({"$text": {"$search": query, "$caseSensitive": False}})
-    return job_results
+    job_results = db.jobs.find({"$and": [{"$text": {"$search": job_query, "$caseSensitive": False}},
+                                         {"Location": location_query}]})
+    matches = job_results.count()
+    return job_results, matches
 
 def get_job_descriptions(job_results):
     descriptions = []
@@ -68,16 +70,16 @@ def convert_to_json_list(n_gram_counts):
         json_list.append(json)
     return json_list
 
-def get_words(job_title, n_grams, n_words):
-    results = find_relevant_jobs(job_title)
+def get_words(job_title, location, n_grams, n_words):
+    results, job_matches = find_relevant_jobs(job_title, location)
     job_descriptions = get_job_descriptions(results)
     grams = get_n_grams_counts(job_descriptions, n_grams)
     word_list = convert_to_json_list(grams[:n_words])
-    return word_list
+    return word_list, job_matches
 
 
-
-job_results = find_relevant_jobs('data scientist')
-words = get_job_descriptions(job_results)
-grams = get_n_grams_counts(words, 3)
-listy = convert_to_json_list(grams)
+if __name__ == "__main__":
+    job_results, num_matches = find_relevant_jobs('data scientist', "Toronto, ON")
+    words = get_job_descriptions(job_results)
+    grams = get_n_grams_counts(words, 3)
+    listy = convert_to_json_list(grams)

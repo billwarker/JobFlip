@@ -10,6 +10,7 @@ JobFlip was developed in Python with the following technologies: Flask, D3.js, C
 
 ## To-Do
 
+0. Add tests
 1. Deploy with Docker
 2. Fix city queries
 3. Add loading bar

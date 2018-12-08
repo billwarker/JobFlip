@@ -21,7 +21,9 @@ class Scraper:
         self.date = datetime.today().strftime("%Y-%m-%d")
         self.job = job.replace(" ", "+").lower()
         self.location = location.replace(" ", "+").lower()
-        self.URL = self.base_URL + "/jobs?q={}&l={}".format(self.job, self.location)
+
+        # &radius=0 will force a search for the exact city
+        self.URL = self.base_URL + "/jobs?q={}&l={}&radius=0".format(self.job, self.location)
         self.pagination = 1
         self.total_scraped_jobs = []
         self.num_jobs = 100
@@ -67,14 +69,19 @@ class Scraper:
 
     def get_next_page(self, soup):
             pagination = soup.find("div", attrs={"class": "pagination"})
-            next_href = pagination.find('a', href=True, text=self.pagination + 1).get("href")
-            self.URL = self.base_URL + next_href
-            self.pagination += 1
+            try:
+                next_href = pagination.find('a', href=True, text=self.pagination + 1).get("href")
+                self.URL = self.base_URL + next_href
+                self.pagination += 1
+            except AttributeError:
+                self.pagination = False
 
     def scrape(self, num_jobs=100):
         self.num_jobs = num_jobs
-        print("""Scraping {} job results for "{}" """.format(num_jobs, self.job))
-        while True:
+        print(self.URL)
+        print("""Scraping {} job results for "{}" in {} """.format(num_jobs, self.job, self.location))
+        # pagination being a number is boolean equivalent to being true
+        while self.pagination == True:
             source_page = self.get_page(self.URL)
             found_jobs = self.get_jobs_on_page(source_page)
             for job in found_jobs:
@@ -85,7 +92,7 @@ class Scraper:
                     job_data["Title"] = self._extract_job_title(job)
                     job_data["Company"] = self._extract_job_employer(job)
                     if job_data["Company"] == "Indeed Prime": continue
-                    job_data["Location"] = self._extract_job_location(job)
+                    job_data["Location"] = self._extract_job_location(job).split(",")[0]
                     desc_url = self.base_URL + self._extract_desc_href(job)
                     job_ad_page = self.get_page(desc_url)
                     page_text = job_ad_page.find("div", attrs={"class":"jobsearch-JobComponent-" + \
@@ -121,7 +128,6 @@ if __name__ == "__main__":
     db_config = Config()
     conn = MongoClient(db_config.MONGO_URI)
     db = conn[db_config.DB]
-
     test = Scraper("UX Designer", "Toronto", conn, db)
     test.scrape(num_jobs=50)
     #test.write_json()
