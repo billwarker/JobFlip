@@ -24,9 +24,12 @@ db = conn[mongo_config.DB]
 
 @celery.task
 def scrape_job_data(job_query, location_query, num_jobs):
-    scraper = Scraper(job_query, location_query, conn, db)
-    scraper.scrape(num_jobs=num_jobs)
-    scraper.write_to_mongo()
+    try:
+        scraper = Scraper(job_query, location_query, conn, db)
+        scraper.scrape(num_jobs=num_jobs)
+        scraper.write_to_mongo()
+    except Exception as e:
+        print(e)
 
 class SearchForm(FlaskForm):
     job_title = StringField("Job Title", validators=[DataRequired()])

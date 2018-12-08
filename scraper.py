@@ -76,6 +76,11 @@ class Scraper:
             except AttributeError:
                 self.pagination = False
 
+    def check_if_already_scraped(self, job_data):
+        query_result = self.db.jobs.find({"$and": [{"Title": job_data["Title"]},
+                                         {"Company": job_data["Company"]}]})
+        return query_result.count()
+
     def scrape(self, num_jobs=100):
         self.num_jobs = num_jobs
         print(self.URL)
@@ -86,13 +91,21 @@ class Scraper:
             found_jobs = self.get_jobs_on_page(source_page)
             for job in found_jobs:
                 try:
+                    # check to see if we hit max jobs
                     if len(self.total_scraped_jobs) == num_jobs : break
-
+                    # get job and company
                     job_data = {}
                     job_data["Title"] = self._extract_job_title(job)
                     job_data["Company"] = self._extract_job_employer(job)
-                    if job_data["Company"] == "Indeed Prime": continue
+                    
+                    # if job in db or indeed prime, skip
+                    if job_data["Company"] == "Indeed Prime" or \
+                    self.check_if_already_scraped(job_data) == True: continue
+                    
+                    # location
                     job_data["Location"] = self._extract_job_location(job).split(",")[0]
+                    
+                    # get job description off href
                     desc_url = self.base_URL + self._extract_desc_href(job)
                     job_ad_page = self.get_page(desc_url)
                     page_text = job_ad_page.find("div", attrs={"class":"jobsearch-JobComponent-" + \
@@ -103,8 +116,9 @@ class Scraper:
                     job_data["Description"] = desc
                     self.total_scraped_jobs.append(job_data)
                     print("{}: {}".format(len(self.total_scraped_jobs), job_data['Title']))
-                except Exception: pass
-                #time.sleep(0.5)
+                
+                # if anything goes wrong just skip this job
+                except Exception: continue
             
             if len(self.total_scraped_jobs) == num_jobs : break
             self.get_next_page(source_page)
@@ -118,17 +132,18 @@ class Scraper:
             json.dump(self.total_scraped_jobs, out_file)
 
     def write_to_mongo(self):
-        print("Writing to MongoDB...")
-        jobs = self.db.jobs
-        #jobs = self.db["{}+{}".format(self.job, self.location)]
-        jobs.insert_many(self.total_scraped_jobs)
+        job_count = len(self.total_scraped_jobs)
+        if job_count > 0:
+            print("Writing {} jobs to MongoDB...".format(job_count))
+            self.db.jobs.insert_many(self.total_scraped_jobs)
+        else:
+            print("No new jobs to write!")
 
 if __name__ == "__main__":
 
     db_config = Config()
     conn = MongoClient(db_config.MONGO_URI)
     db = conn[db_config.DB]
-    test = Scraper("UX Designer", "Toronto", conn, db)
+    test = Scraper("Chef", "Toronto", conn, db)
     test.scrape(num_jobs=50)
-    #test.write_json()
     test.write_to_mongo()
