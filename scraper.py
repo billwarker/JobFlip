@@ -76,7 +76,7 @@ class Scraper:
             except AttributeError:
                 self.pagination = False
 
-    def check_if_already_scraped(self, job_data):
+    def _check_if_already_scraped(self, job_data):
         query_result = self.db.jobs.find({"$and": [{"Title": job_data["Title"]},
                                          {"Company": job_data["Company"]}]})
         return query_result.count()
@@ -100,7 +100,7 @@ class Scraper:
                     
                     # if job in db or indeed prime, skip
                     if job_data["Company"] == "Indeed Prime" or \
-                    self.check_if_already_scraped(job_data) == True: continue
+                    self._check_if_already_scraped(job_data) == True: continue
                     
                     # location
                     job_data["Location"] = self._extract_job_location(job).split(",")[0]
